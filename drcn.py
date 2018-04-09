@@ -22,6 +22,8 @@ class DRCN(chainer.Chain):
             self.conv2 = L.Convolution2D(100, 150, ksize=(3, 3), pad=1)
             self.conv3 = L.Convolution2D(150, 200, ksize=(3, 3), pad=1)
             self.fc1 = L.Linear(200*8*8, 1000)
+            # classifier
+            self.classifier = L.Linear(1000, 10)
             # decoder
             self.fc2 = L.Linear(1000, 1000)
             self.fc3 = L.Linear(1000, 200*8*8)
@@ -37,6 +39,11 @@ class DRCN(chainer.Chain):
         h = F.relu(self.conv3(h))
         h = F.relu(self.fc1(h))
         return h
+
+    def classify(self, h):
+        h = F.dropout(h)
+        logits = self.classifier(h)
+        return logits
 
     def decode(self, x):
         h = x
