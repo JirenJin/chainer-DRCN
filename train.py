@@ -53,7 +53,8 @@ def main(args):
     }
 
     updater = Updater(s_train_iter, t_train_iter, optimizers, args)
-    trainer = Trainer(updater, (args.max_iter, 'iteration'))
+    out_dir = utils.prepare_dir(args)
+    trainer = Trainer(updater, (args.max_iter, 'iteration'), out=out_dir)
     trainer.extend(extensions.LogReport(trigger=(args.interval, args.unit)))
     trainer.extend(
         extensions.snapshot_object(model, filename='model'),
@@ -73,11 +74,11 @@ if __name__ == "__main__":
     parser.add_argument("--max_iter", "-i", type=int, default=100)
     parser.add_argument("--interval", type=int, default=1)
     parser.add_argument("--batchsize", "-b", type=int, default=128)
-    parser.add_argument("--config_file", type=argparse.FileType(mode='r'))
-    parser.add_argument("--lr", "-lr", type=float, default=1e-4)
+    parser.add_argument("--lr", "-lr", type=float, default=3e-4)
+    parser.add_argument("--out", type=str, default='result')
     parser.add_argument("--unit", type=str, choices=['iteration', 'epoch'], default="iteration")
+    parser.add_argument("--noise", type=str, choices=['no_noise', 'impulse', 'gaussian'], default="impulse")
     args = parser.parse_args()
-    args = utils.parse_args(args)
     pprint.pprint(vars(args))
 
     main(args)
