@@ -8,9 +8,18 @@ from base_da_updater import BaseDAUpdater
 
 def get_impulse_noise(X, level):
     p = 1. - level
-    device = cuda.get_device_from_array(X)
+    device = cuda.get_device_from_array(X.data)
     X = cuda.to_cpu(X)
     Y = X * np.random.binomial(1, p, size=X.shape).astype('f')
+    Y = cuda.to_gpu(Y, device=device)
+    return Y
+
+
+def get_gaussian_noise(X, std):
+    device = cuda.get_device_from_array(X.data)
+    X = cuda.to_cpu(X)
+    Y = np.random.normal(X, scale=std).astype('f')
+    Y = np.clip(Y, 0., 1.)
     Y = cuda.to_gpu(Y, device=device)
     return Y
 
@@ -20,16 +29,25 @@ class Updater(BaseDAUpdater):
     def __init__(self, s_iter, t_iter, optimizers, args):
         super().__init__(s_iter, t_iter, optimizers, device=args.device)
         self.model = optimizers['model'].target
+        self.noise = args.noise
 
     def update_core(self):
+        cuda.Device(self.device).use()
         # autoencoder training
         loss_rec_data = 0
         n_batch = 0
         total_batches = len(self.t_iter.dataset) / self.t_iter.batch_size
         for t_batch in self.t_iter:
             t_imgs, _ = self.converter(t_batch, self.device)
-            # denoising autoencoder
-            t_imgs = get_impulse_noise(t_imgs, 0.5)
+            # whether to use denoising autoencoder
+            if self.noise == 'impulse':
+                t_imgs = get_impulse_noise(t_imgs, 0.5)
+            elif self.noise == 'gaussian':
+                t_imgs = get_gaussian_noise(t_imgs, 0.5)
+            elif self.noise == 'no_noise':
+                pass
+            else:
+                raise NotImplementedError
             t_encoding = self.model.encode(t_imgs)
             t_decoding = self.model.decode(t_encoding)
             loss_rec = F.mean_squared_error(t_decoding, t_imgs)
