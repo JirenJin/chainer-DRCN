@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import chainer
 from chainer import cuda
@@ -34,6 +36,7 @@ class Updater(BaseDAUpdater):
 
     def update_core(self):
         cuda.Device(self.device).use()
+        xp = self.model.xp
         if not self.source_only:
             # autoencoder training
             loss_rec_data = 0
@@ -41,6 +44,7 @@ class Updater(BaseDAUpdater):
             total_batches = len(self.t_iter.dataset) / self.t_iter.batch_size
             for t_batch in self.t_iter:
                 t_imgs, _ = self.converter(t_batch, self.device)
+                t_imgs_copy = copy.deepcopy(t_imgs)
                 # whether to use denoising autoencoder
                 if self.noise == 'impulse':
                     t_imgs = get_impulse_noise(t_imgs, 0.5)
@@ -52,7 +56,7 @@ class Updater(BaseDAUpdater):
                     raise NotImplementedError
                 t_encoding = self.model.encode(t_imgs)
                 t_decoding = self.model.decode(t_encoding)
-                loss_rec = F.mean_squared_error(t_decoding, t_imgs)
+                loss_rec = F.mean_squared_error(t_decoding, t_imgs_copy)
                 for opt in self.optimizers.values():
                     opt.target.cleargrads()
                 loss_rec.backward()
