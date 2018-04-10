@@ -1,7 +1,18 @@
+import numpy as np
 import chainer
+from chainer import cuda
 import chainer.functions as F
 
 from base_da_updater import BaseDAUpdater
+
+
+def get_impulse_noise(X, level):
+    p = 1. - level
+    device = cuda.get_device_from_array(X)
+    X = cuda.to_cpu(X)
+    Y = X * np.random.binomial(1, p, size=X.shape).astype('f')
+    Y = cuda.to_gpu(Y, device=device)
+    return Y
 
 
 class Updater(BaseDAUpdater):
@@ -17,6 +28,8 @@ class Updater(BaseDAUpdater):
         total_batches = len(self.t_iter.dataset) / self.t_iter.batch_size
         for t_batch in self.t_iter:
             t_imgs, _ = self.converter(t_batch, self.device)
+            # denoising autoencoder
+            t_imgs = get_impulse_noise(t_imgs, 0.5)
             t_encoding = self.model.encode(t_imgs)
             t_decoding = self.model.decode(t_encoding)
             loss_rec = F.mean_squared_error(t_decoding, t_imgs)
