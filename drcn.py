@@ -7,9 +7,11 @@ from chainer import cuda
 
 
 def clip_relu(x):
-    xp = cuda.get_array_module(x)
+    xp = cuda.get_array_module(x.data)
     h = F.relu(x)
-    return F.minimum(h, xp.ones_like(h.data))
+    with cuda.get_device_from_array(x.data):
+        h = F.minimum(h, xp.ones_like(h.data))
+    return h
 
 class DRCN(chainer.Chain):
     def __init__(self, num_class=10,
