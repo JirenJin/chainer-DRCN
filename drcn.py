@@ -21,12 +21,12 @@ class DRCN(chainer.Chain):
             self.conv1 = L.Convolution2D(1, 100, ksize=(3, 3), pad=1)
             self.conv2 = L.Convolution2D(100, 150, ksize=(3, 3), pad=1)
             self.conv3 = L.Convolution2D(150, 200, ksize=(3, 3), pad=1)
-            self.fc1 = L.Linear(200*8*8, 1000)
+            self.fc1 = L.Linear(200*8*8, 1024)
             # classifier
-            self.classifier = L.Linear(1000, 10)
+            self.classifier = L.Linear(1024, 10)
             # decoder
-            self.fc2 = L.Linear(1000, 1000)
-            self.fc3 = L.Linear(1000, 200*8*8)
+            self.fc2 = L.Linear(1024, 1024)
+            self.fc3 = L.Linear(1024, 200*8*8)
             self.conv4 = L.Convolution2D(200, 200, ksize=(3, 3), pad=1)
             self.conv5 = L.Convolution2D(200, 150, ksize=(3, 3), pad=1)
             self.conv6 = L.Convolution2D(150, 100, ksize=(3, 3), pad=1)
