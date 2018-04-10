@@ -10,13 +10,11 @@ from chainer.iterators import SerialIterator
 from chainer.training import Trainer
 from chainer.training import extensions
 from chainer.training.triggers import MaxValueTrigger
-from chainer.datasets import TransformDataset
 
 import dataset
 import drcn
 from updater import Updater
 import utils
-from utils import augmentation
 
 
 class LossAndAccuracy(chainer.Chain):
@@ -36,10 +34,6 @@ class LossAndAccuracy(chainer.Chain):
 def main(args):
     s_train, s_test = dataset.load_svhn()
     t_train, t_test = dataset.load_mnist()
-    s_train = TransformDataset(s_train, augmentation)
-    s_test = TransformDataset(s_test, augmentation)
-    t_train = TransformDataset(t_train, augmentation)
-    t_test = TransformDataset(t_test, augmentation)
 
     s_train_iter = SerialIterator(
         s_train, args.batchsize, shuffle=True, repeat=True)
@@ -53,7 +47,7 @@ def main(args):
     model = drcn.DRCN()
     target_model = LossAndAccuracy(model)
     loss_list = ['loss_cla_s', 'loss_cla_t', 'loss_rec']
-    optimizer = chainer.optimizers.Adam(args.lr)
+    optimizer = chainer.optimizers.RMSprop(args.lr)
     optimizer.setup(model)
     optimizers = {
         'model': optimizer

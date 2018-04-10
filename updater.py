@@ -6,6 +6,7 @@ from chainer import cuda
 import chainer.functions as F
 
 from base_da_updater import BaseDAUpdater
+from utils import augmentation
 
 
 def get_impulse_noise(X, level):
@@ -43,8 +44,9 @@ class Updater(BaseDAUpdater):
             n_batch = 0
             total_batches = len(self.t_iter.dataset) / self.t_iter.batch_size
             for t_batch in self.t_iter:
-                t_imgs, _ = self.converter(t_batch, self.device)
-                t_imgs_copy = copy.deepcopy(t_imgs)
+                t_batch_augmented = [augmentation(data) for data in t_batch]
+                t_imgs_copy, _ = self.converter(t_batch, self.device)
+                t_imgs, _ = self.converter(t_batch_augmented, self.device)
                 # whether to use denoising autoencoder
                 if self.noise == 'impulse':
                     t_imgs = get_impulse_noise(t_imgs, 0.5)
@@ -74,7 +76,8 @@ class Updater(BaseDAUpdater):
         n_batch = 0
         total_batches = len(self.s_iter.dataset) / self.s_iter.batch_size
         for s_batch in self.s_iter:
-            s_imgs, s_labels = self.converter(s_batch, self.device)
+            s_batch_augmented = [augmentation(data) for data in s_batch]
+            s_imgs, s_labels = self.converter(s_batch_augmented, self.device)
             s_encoding = self.model.encode(s_imgs)
             s_logits = self.model.classify(s_encoding)
             loss_cla_s = F.softmax_cross_entropy(s_logits, s_labels)
