@@ -78,6 +78,7 @@ if __name__ == "__main__":
     parser.add_argument("--out", type=str, default='result')
     parser.add_argument("--unit", type=str, choices=['iteration', 'epoch'], default="iteration")
     parser.add_argument("--noise", type=str, choices=['no_noise', 'impulse', 'gaussian'], default="impulse")
+    parser.add_argument("--source_only", type=int, default=0)
     args = parser.parse_args()
     pprint.pprint(vars(args))
 

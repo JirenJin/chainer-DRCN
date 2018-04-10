@@ -7,7 +7,10 @@ import os
 
 def prepare_dir(args):
     # customize the output path
-    out_path = os.path.join(args.out, args.noise)
+    if args.source_only:
+        out_path = os.path.join(args.out, 'source_only')
+    else:
+        out_path = os.path.join(args.out, args.noise)
     try:
         os.makedirs(out_path)
     except OSError:
