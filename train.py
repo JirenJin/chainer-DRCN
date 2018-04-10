@@ -10,11 +10,13 @@ from chainer.iterators import SerialIterator
 from chainer.training import Trainer
 from chainer.training import extensions
 from chainer.training.triggers import MaxValueTrigger
+from chainer.datasets import TransformDataset
 
 import dataset
 import drcn
 from updater import Updater
 import utils
+from utils import augmentation
 
 
 class LossAndAccuracy(chainer.Chain):
@@ -34,10 +36,15 @@ class LossAndAccuracy(chainer.Chain):
 def main(args):
     s_train, s_test = dataset.load_svhn()
     t_train, t_test = dataset.load_mnist()
+    s_train = TransformDataset(s_train, augmentation)
+    s_test = TransformDataset(s_test, augmentation)
+    t_train = TransformDataset(t_train, augmentation)
+    t_test = TransformDataset(t_test, augmentation)
+
     s_train_iter = SerialIterator(
         s_train, args.batchsize, shuffle=True, repeat=True)
     t_train_iter = SerialIterator(
-        t_train, args.batchsize, shuffle=True, repeat=True)
+        t_test, args.batchsize, shuffle=True, repeat=True)
     s_test_iter = SerialIterator(
         s_test, args.batchsize, shuffle=False, repeat=False)
     t_test_iter = SerialIterator(
